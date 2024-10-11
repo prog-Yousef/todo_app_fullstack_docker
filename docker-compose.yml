@@ -1,0 +1,47 @@
+version: "3.9"
+
+networks:
+  sync-network:
+
+volumes:
+  todos-db:
+
+services:
+  database:
+    build:
+      context: ./database
+      dockerfile: Dockerfile
+    container_name: database
+    hostname: database
+    networks:
+      - sync-network
+    volumes:
+      - todos-db:/todos
+    environment:
+      - PORT=8001
+    ports:
+      - "8001:8001"
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: api
+    hostname: api
+    networks:
+      - sync-network
+    environment:
+      - PORT=8002
+      - DATABASE=http://database:8001
+    ports:
+      - "8002:8002"
+    depends_on:
+      - database
+  frontend:
+    build:
+      context: ./todo-app
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - api
